@@ -254,6 +254,27 @@ export class PatientViewPageStore {
 
     }, []);
 
+    readonly genomeDrivenDiagnosis = remoteData({
+        await: () => [
+            this.samples
+        ],
+        invoke: async() => {
+
+            let resp: any = await Promise.all(this.samples.result.map(s => request.get(`http://triage.cbioportal.mskcc.org/gdd/4b65c0718e4a/${s.sampleId}`)));
+
+            const parsedResp: any = _.keyBy(resp.map((r:any) => JSON.parse(r.text)), 'Tumor_Sample_Barcode');
+            // remove undefined keys
+            delete parsedResp["undefined"];
+
+            return parsedResp;
+
+        },
+        onError: (err: Error) => {
+            // fail silently
+        }
+
+    }, []);
+
     readonly cosmicData = remoteData({
         await: () => [
             this.mutationData,
