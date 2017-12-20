@@ -70,9 +70,7 @@ export function getHotspotsApiUrl() {
 export function getHotspots3DApiUrl() {
     return cbioUrl('proxy/3dhotspots.org/3d');
 }
-export function getOncoKbApiUrl() {
-    let url = AppConfig.oncoKBApiUrl;
-
+function cbioUrlProxyForLegacyConfig(url:any) {
     if (typeof url === 'string') {
         // we need to support legacy configuration values
         url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
@@ -81,29 +79,15 @@ export function getOncoKbApiUrl() {
     } else {
         return undefined;
     }
-
+}
+export function getOncoKbApiUrl() {
+    return cbioUrlProxyForLegacyConfig(AppConfig.oncoKBApiUrl);
 }
 export function getGenomeNexusApiUrl() {
-    let url = AppConfig.genomeNexusApiUrl;
-    if (typeof url === 'string') {
-        // we need to support legacy configuration values
-        url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
-        url = url.replace(/\/$/,""); // get rid of trailing slashes
-        return cbioUrl(`proxy/${url}`)
-    } else {
-        return undefined;
-    }
+    return cbioUrlProxyForLegacyConfig(AppConfig.genomeNexusApiUrl);
 }
 export function getGenomeDrivenDiagnosisUrl() {
-    let url = AppConfig.genomeDrivenDiagnosisUrl;
-    if (typeof url === 'string') {
-        // we need to support legacy configuration values
-        url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
-        url = url.replace(/\/$/,""); // get rid of trailing slashes
-        return cbioUrl(`proxy/${url}`)
-    } else {
-        return undefined;
-    }
+    return cbioUrlProxyForLegacyConfig(AppConfig.genomeDrivenDiagnosisUrl);
 }
 export function getPdbAnnotationApiUrl() {
     return 'https://cbioportal.mskcc.org/pdb-annotation';

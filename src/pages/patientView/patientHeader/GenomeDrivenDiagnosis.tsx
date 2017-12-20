@@ -11,11 +11,12 @@ export type GDDOutput = {
     Conf1: string;
     Conf2: string;
     Conf3: string;
+    Diagnosed_Cancer_Type: string;
+    Diagnosed_Cancer_Type_Detailed: string;
 }
 
 interface IGenomeDrivenDiagnosisProps {
     prediction: GDDOutput;
-    sampleCancerType?: string;
 }
 
 export default class GenomeDrivenDiagnosis extends React.Component<IGenomeDrivenDiagnosisProps, {}> {
@@ -25,7 +26,6 @@ export default class GenomeDrivenDiagnosis extends React.Component<IGenomeDriven
                 placement='bottomLeft'
                 trigger={['hover', 'focus']}
                 overlay={this.tooltipContent()}
-                arrowContent={<div className="rc-tooltip-arrow-inner" />}
                 destroyTooltipOnHide={false}
                 onPopupAlign={placeArrowBottomLeft}
             >
@@ -37,46 +37,68 @@ export default class GenomeDrivenDiagnosis extends React.Component<IGenomeDriven
     }
 
     private predictionContent() {
-        if (this.props.prediction.Pred1 && this.props.sampleCancerType && this.props.prediction.Pred1.toLowerCase() === this.props.sampleCancerType.toLowerCase()) {
-            return <a>(GDD: <i className='fa fa-check' aria-hidden="true"></i>)</a>
+        if (this.props.prediction.Pred1 && this.cleanCancerType(this.props.prediction.Pred1).toLowerCase() === this.cleanCancerType(this.props.prediction.Diagnosed_Cancer_Type).toLowerCase()) {
+            return <a>(GDD)</a>
         } else {
-            return <a>(GDD Prediction: {this.cleanCancerType(this.props.prediction.Pred1)})</a>
+            return <a>(GDD: <span data-test="gdd-prediction">{this.cleanCancerType(this.props.prediction.Pred1)}</span>)</a>
         }
     }
 
     private tooltipContent() {
         return (
-            <div>
+            <div style={{maxWidth:250}}>
                 <h6 style={{textAlign:"center"}}>
                     Genome Driven Diagnosis (GDD)
-                    <DefaultTooltip
-                        mouseEnterDelay={0}
-                        placement="right"
-                        overlay={<span>Predicted probability for 22 tumor types
-                            based on genomic features, using a calibrated
-                            RandomForest algorithm.</span>}
-                    >
-                        <span style={{paddingLeft: 2}}><FontAwesome name='question-circle'/></span>
-                    </DefaultTooltip>
                 </h6>
-                <SimpleTable 
+                <SimpleTable
                     headers={[
-                        <th></th>,
                         <th>Cancer Type</th>,
                         <th>Confidence</th>
                     ]}
                     rows={[
-                        <tr><td>1</td><td>{this.cleanCancerType(this.props.prediction.Pred1)}</td><td>{this.props.prediction.Conf1}</td></tr>,
-                        <tr><td>2</td><td>{this.cleanCancerType(this.props.prediction.Pred2)}</td><td>{this.props.prediction.Conf2}</td></tr>,
-                        <tr><td>3</td><td>{this.cleanCancerType(this.props.prediction.Pred3)}</td><td>{this.props.prediction.Conf3}</td></tr>
+                        <tr><td>{this.cleanCancerType(this.props.prediction.Pred1)}</td><td>{this.progressBar(this.props.prediction.Conf1, true)}</td></tr>,
+                        <tr><td>{this.cleanCancerType(this.props.prediction.Pred2)}</td><td>{this.progressBar(this.props.prediction.Conf2, false)}</td></tr>,
+                        <tr><td>{this.cleanCancerType(this.props.prediction.Pred3)}</td><td>{this.progressBar(this.props.prediction.Conf3, false)}</td></tr>
                     ]}
                 />
+                <hr style={{marginTop:10,marginBottom:10}}/>
+                <span className="small">
+                    <b>Genome Driven Diagnosis (GDD)</b> predicts probability for 22 tumor
+                    types based on genomic features, using a calibrated RandomForest
+                    algorithm.
+                </span>
             </div>
         );
     }
 
-    private tableRows() {
-        return
+    private progressBar(confidence:string, determineColor:boolean) {
+        let confidencePerc = Math.round(parseFloat(confidence) * 100);
+
+        let progressBarStyle:string = "progress-bar-info";
+        if (determineColor) {
+            if (confidencePerc > 50) {
+                progressBarStyle = "progress-bar-success";
+            } else if (confidencePerc > 5) {
+                progressBarStyle = "progress-bar-warning";
+            } else {
+                progressBarStyle = "progress-bar-danger";
+            }
+        }
+
+        return (
+            <div className="progress" style={{position:"relative",width:100,marginBottom:0}}>
+                <div className={`progress-bar ${progressBarStyle}`}
+                     role="progressbar" aria-valuenow={`${confidencePerc}`}
+                     aria-valuemin="0" aria-valuemax="100"
+                     style={{width:`${confidencePerc}%`}} />
+                 <div style={{position:"absolute",
+                              textShadow:"-1px 0 white, 0 1px white, 1px 0 white, 0 -1px white",
+                              width:100,
+                              marginTop:2,
+                              textAlign:"center"}}
+                  >{confidencePerc}%</div>
+            </div>
+        );
     }
 
     private cleanCancerType(cancerType:string) {

@@ -737,27 +737,22 @@ export function indexHotspotData(hotspotData:MobxPromise<ICancerHotspotData>): I
 
 export function generateUniqueSampleKeyToTumorTypeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                                                studies?: MobxPromise<CancerStudy[]>,
-                                               samples?: MobxPromise<Sample[]>): {[sampleId: string]: string}
+                                               samples?: MobxPromise<Sample[]>,
+                                               clinicalAttributeNames = ["CANCER_TYPE_DETAILED"]): {[sampleId: string]: string}
 
 {
     const map: {[sampleId: string]: string} = {};
 
     if (clinicalDataForSamples.result)
     {
-        // first priority is CANCER_TYPE_DETAILED in clinical data
+        // priority based on order of clinicalAttributeNames
         _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
-            if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED") {
-                map[clinicalData.uniqueSampleKey] = clinicalData.value;
+            for (let i = 0; i < clinicalAttributeNames.length; i++) {
+                if (map[clinicalData.uniqueSampleKey] === undefined && clinicalData.clinicalAttributeId === clinicalAttributeNames[i]) {
+                    map[clinicalData.uniqueSampleKey] = clinicalData.value;
+                }
             }
         });
-
-        // // second priority is CANCER_TYPE in clinical data
-        // _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
-        //     // update map with CANCER_TYPE value only if it is not already updated
-        //     if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.uniqueSampleKey] === undefined) {
-        //         map[clinicalData.uniqueSampleKey] = clinicalData.value;
-        //     }
-        // });
     }
 
     // last resort: fall back to the study cancer type
